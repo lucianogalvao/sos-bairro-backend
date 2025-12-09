@@ -9,7 +9,9 @@ describe('OccurrenceCategoriesController', () => {
       controllers: [OccurrenceCategoriesController],
     }).compile();
 
-    controller = module.get<OccurrenceCategoriesController>(OccurrenceCategoriesController);
+    controller = module.get<OccurrenceCategoriesController>(
+      OccurrenceCategoriesController,
+    );
   });
 
   it('should be defined', () => {
