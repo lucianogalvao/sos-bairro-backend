@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  MORADOR
+  MODERADOR
+  ADMIN
+}
+
+enum RiskLevel {
+  BAIXO
+  MEDIO
+  ALTO
+}
+
+enum OccurrenceStatus {
+  REGISTRADA
+  EM_ANALISE
+  RESOLVIDA
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(MORADOR)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  occurrences          Occurrence[] @relation("ResidentOccurrences")
+  moderatedOccurrences Occurrence[] @relation("ModeratorOccurrences")
+}
+
+model OccurrenceCategory {
+  id        Int       @id @default(autoincrement())
+  title     String
+  riskLevel RiskLevel
+  createdAt DateTime  @default(now())
+
+  occurrences Occurrence[]
+}
+
+model Occurrence {
+  id          Int              @id @default(autoincrement())
+  description String
+  status      OccurrenceStatus @default(REGISTRADA)
+
+  locationLatitude  Float?
+  locationLongitude Float?
+
+  imageUrl String?
+
+  categoryId Int
+  category   OccurrenceCategory @relation(fields: [categoryId], references: [id])
+
+  residentId Int
+  resident   User @relation("ResidentOccurrences", fields: [residentId], references: [id])
+
+  moderatorId Int?
+  moderator   User? @relation("ModeratorOccurrences", fields: [moderatorId], references: [id])
+
+  riskLevelOverride RiskLevel?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
