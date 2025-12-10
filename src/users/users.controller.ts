@@ -9,7 +9,7 @@ interface AuthenticatedRequest extends Request {
 @Controller('users')
 export class UsersController {
   @UseGuards(JwtAuthGuard)
-  @Get('profile')
+  @Get('my-profile')
   getMe(@Req() req: AuthenticatedRequest) {
     return req.user;
   }
