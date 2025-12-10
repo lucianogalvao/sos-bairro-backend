@@ -6,3 +6,17 @@ export interface CreateUserParams {
   passwordHash: string;
   role?: Role;
 }
+
+export interface JwtPayload {
+  sub: number;
+  email: string;
+  name: string;
+  role: Role;
+}
+
+export interface AuthenticatedUser {
+  id: number;
+  email: string;
+  name: string;
+  role: Role;
+}
