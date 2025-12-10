@@ -39,8 +39,6 @@ export class AuthService {
 
     if (!valid) throw new Error('Credenciais inválidas.');
 
-    console.log('user =>', user);
-
     const payload = {
       sub: user.id,
       email: user.email,
@@ -48,12 +46,9 @@ export class AuthService {
       role: user.role,
     };
 
-    console.log('payload =>', payload);
-
     const token = await this.jwt.signAsync(payload);
 
     const { passwordHash: _, ...safeUser } = user;
-    console.log('novo user =>', user);
     return {
       user: safeUser,
       token,
