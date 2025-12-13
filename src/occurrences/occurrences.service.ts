@@ -57,19 +57,49 @@ export class OccurrencesService {
         ...(query.dateTo ? { lte: new Date(query.dateTo) } : {}),
       };
     }
-    return this.prisma.occurrence.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        category: true,
-        resident: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
+
+    const orderBy: Prisma.OccurrenceOrderByWithRelationInput = {
+      [sortBy]: sortOrder,
+    };
+
+    const [totalItems, items] = await this.prisma.$transaction([
+      this.prisma.occurrence.count({ where }),
+      this.prisma.occurrence.findMany({
+        where,
+        skip,
+        take,
+        orderBy,
+        include: {
+          category: true,
+          resident: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
+      }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    return {
+      items,
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages,
       },
-    });
+    };
   }
 }

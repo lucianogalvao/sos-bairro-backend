@@ -1,6 +1,23 @@
 import { OccurrenceStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsInt, IsISO8601, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsISO8601,
+  IsOptional,
+  Max,
+  Min,
+} from 'class-validator';
+
+export enum OccurrenceSortBy {
+  CREATED_AT = 'createdAt',
+  STATUS = 'status',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 export class ListOccurrencesQueryDto {
   @IsOptional()
@@ -19,4 +36,25 @@ export class ListOccurrencesQueryDto {
   @IsOptional()
   @IsISO8601()
   dateTo?: string;
+
+  @IsOptional()
+  @IsEnum(OccurrenceSortBy)
+  sortBy?: OccurrenceSortBy;
+
+  @IsOptional()
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder;
+
+  @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : 1))
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : 10))
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  pageSize: number = 10;
 }
