@@ -5,6 +5,7 @@ import { OccurrenceCategoriesModule } from './occurrence-categories/occurrence-c
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { OccurrencesModule } from './occurrences/occurrences.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { OccurrencesModule } from './occurrences/occurrences.module';
     UsersModule,
     AuthModule,
     OccurrencesModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}
