@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -14,6 +15,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateOcurrenceDto } from './dto/create-ocurrence.dto';
 import { AuthenticatedUser } from 'src/types';
 import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
+import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
 }
@@ -49,5 +51,14 @@ export class OccurrencesController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.occurrencesService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateOccurrenceStatusDto,
+  ) {
+    return this.occurrencesService.updateStatus(id, body);
   }
 }

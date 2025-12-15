@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOcurrenceDto } from './dto/create-ocurrence.dto';
 import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
-import { Prisma } from '@prisma/client';
+import { OccurrenceStatus, Prisma } from '@prisma/client';
+import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
 
 @Injectable()
 export class OccurrencesService {
@@ -122,5 +127,52 @@ export class OccurrencesService {
     }
 
     return occurrence;
+  }
+
+  async updateStatus(id: number, dto: UpdateOccurrenceStatusDto) {
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { id },
+      select: { id: true, status: true },
+    });
+
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada.');
+    }
+
+    const current = occurrence.status;
+    const next = dto.status;
+
+    const allowedNext: Record<OccurrenceStatus, OccurrenceStatus[]> = {
+      REGISTRADA: [OccurrenceStatus.EM_ANALISE],
+      EM_ANALISE: [OccurrenceStatus.RESOLVIDA],
+      RESOLVIDA: [],
+    };
+
+    if (current === next) {
+      return this.prisma.occurrence.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          resident: { select: { id: true, name: true, email: true } },
+          moderator: { select: { id: true, name: true, email: true } },
+        },
+      });
+    }
+
+    if (!allowedNext[current].includes(next)) {
+      throw new BadRequestException(
+        `Transição de status inválida: ${current} → ${next}.`,
+      );
+    }
+
+    return this.prisma.occurrence.update({
+      where: { id },
+      data: { status: next },
+      include: {
+        category: true,
+        resident: { select: { id: true, name: true, email: true } },
+        moderator: { select: { id: true, name: true, email: true } },
+      },
+    });
   }
 }
