@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOcurrenceDto } from './dto/create-ocurrence.dto';
 import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
@@ -101,5 +101,26 @@ export class OccurrencesService {
         totalPages,
       },
     };
+  }
+
+  async findOne(id: number) {
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        resident: {
+          select: { id: true, name: true, email: true },
+        },
+        moderator: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada.');
+    }
+
+    return occurrence;
   }
 }

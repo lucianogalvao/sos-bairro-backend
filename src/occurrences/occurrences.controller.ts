@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -18,7 +20,7 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('occurrences')
 export class OccurrencesController {
-  constructor(private readonly ocurrencesService: OccurrencesService) {}
+  constructor(private readonly occurrencesService: OccurrencesService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -27,19 +29,25 @@ export class OccurrencesController {
     @Req() req: AuthenticatedRequest,
   ) {
     const residentId = req.user.id;
-    return this.ocurrencesService.create(body, residentId);
+    return this.occurrencesService.create(body, residentId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('my-occurrences')
   async findMine(@Req() req: AuthenticatedRequest) {
     const residentId = req.user.id;
-    return this.ocurrencesService.findMine(residentId);
+    return this.occurrencesService.findMine(residentId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Query() query: ListOccurrencesQueryDto) {
-    return this.ocurrencesService.findAll(query);
+    return this.occurrencesService.findAll(query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.occurrencesService.findOne(id);
   }
 }
