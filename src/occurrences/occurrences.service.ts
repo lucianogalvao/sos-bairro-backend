@@ -8,6 +8,7 @@ import { CreateOcurrenceDto } from './dto/create-ocurrence.dto';
 import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
 import { OccurrenceStatus, Prisma } from '@prisma/client';
 import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
+import { AssignModeratorDto } from './dto/assign-moderator.dto';
 
 @Injectable()
 export class OccurrencesService {
@@ -86,6 +87,13 @@ export class OccurrencesService {
         include: {
           category: true,
           resident: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          moderator: {
             select: {
               id: true,
               name: true,
@@ -172,6 +180,40 @@ export class OccurrencesService {
         category: true,
         resident: { select: { id: true, name: true, email: true } },
         moderator: { select: { id: true, name: true, email: true } },
+      },
+    });
+  }
+
+  async assignModerator(id: number, dto: AssignModeratorDto) {
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { id },
+    });
+
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada.');
+    }
+
+    const moderator = await this.prisma.user.findUnique({
+      where: { id: dto.moderatorId },
+    });
+
+    if (!moderator) {
+      throw new NotFoundException('Moderador não encontrado.');
+    }
+
+    return this.prisma.occurrence.update({
+      where: { id },
+      data: {
+        moderatorId: dto.moderatorId,
+      },
+      include: {
+        category: true,
+        resident: {
+          select: { id: true, name: true, email: true },
+        },
+        moderator: {
+          select: { id: true, name: true, email: true },
+        },
       },
     });
   }

@@ -16,6 +16,7 @@ import { CreateOcurrenceDto } from './dto/create-ocurrence.dto';
 import { AuthenticatedUser } from 'src/types';
 import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
 import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
+import { AssignModeratorDto } from './dto/assign-moderator.dto';
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
 }
@@ -60,5 +61,14 @@ export class OccurrencesController {
     @Body() body: UpdateOccurrenceStatusDto,
   ) {
     return this.occurrencesService.updateStatus(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/assign')
+  async assignModerator(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: AssignModeratorDto,
+  ) {
+    return this.occurrencesService.assignModerator(id, body);
   }
 }
