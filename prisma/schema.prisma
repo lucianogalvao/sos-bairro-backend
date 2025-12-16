@@ -65,8 +65,6 @@ model Occurrence {
   moderatorId Int?
   moderator   User? @relation("ModeratorOccurrences", fields: [moderatorId], references: [id])
 
-  riskLevelOverride RiskLevel?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -41,7 +41,6 @@ CREATE TABLE "Occurrence" (
     "categoryId" INTEGER NOT NULL,
     "residentId" INTEGER NOT NULL,
     "moderatorId" INTEGER,
-    "riskLevelOverride" "RiskLevel",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
