@@ -19,6 +19,7 @@ import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
 import { AssignModeratorDto } from './dto/assign-moderator.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { RolesGuard } from 'src/auth/roles.guard';
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
 }
@@ -56,7 +57,7 @@ export class OccurrencesController {
     return this.occurrencesService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.MODERADOR, Role.ADMIN)
   @Patch(':id/status')
   async updateStatus(
@@ -66,7 +67,7 @@ export class OccurrencesController {
     return this.occurrencesService.updateStatus(id, body);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.MODERADOR, Role.ADMIN)
   @Patch(':id/assign')
   async assignModerator(
