@@ -1,6 +1,7 @@
 import 'dotenv/config';
-import { PrismaClient, RiskLevel } from '@prisma/client';
+import { PrismaClient, RiskLevel, Role } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import * as bcrypt from 'bcrypt';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -15,10 +16,63 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  console.log('🌱 Limpando tabela de ocorrências...');
+  await prisma.occurrence.deleteMany();
+
   console.log('🌱 Limpando tabela de categorias...');
   await prisma.occurrenceCategory.deleteMany();
 
+  console.log('🌱 Limpando tabela de usuários...');
+  await prisma.user.deleteMany();
+
   console.log('🌱 Iniciando seed das categorias de ocorrência...');
+
+  const adminName = process.env.ADMIN_NAME ?? 'Admin Master';
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@sosbairro.com';
+  const adminPassword = process.env.ADMIN_PASSWORD ?? 'sosbairro@123';
+
+  const adminHash = await bcrypt.hash(adminPassword, 10);
+
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      name: adminName,
+      passwordHash: adminHash,
+      role: Role.ADMIN,
+    },
+    create: {
+      name: adminName,
+      email: adminEmail,
+      role: Role.ADMIN,
+      passwordHash: adminHash,
+    },
+  });
+
+  console.log('✅ Admin Master criado');
+
+  const moderatorName = process.env.MODERATOR_NAME ?? 'Moderador SOS Bairro';
+  const moderatorEmail =
+    process.env.MODERATOR_EMAIL ?? 'moderador@sosbairro.com';
+  const moderatorPassword = process.env.MODERATOR_PASSWORD ?? 'sosbairro@123';
+
+  const moderatorHash = await bcrypt.hash(moderatorPassword, 10);
+
+  await prisma.user.upsert({
+    where: { email: moderatorEmail },
+    update: {
+      name: moderatorName,
+      passwordHash: moderatorHash,
+      role: Role.MODERADOR,
+    },
+    create: {
+      name: moderatorName,
+      email: moderatorEmail,
+      role: Role.MODERADOR,
+      passwordHash: moderatorHash,
+    },
+  });
+
+  console.log('✅ Moderador SOS Bairro criado');
 
   const categories: { title: string; riskLevel: RiskLevel }[] = [
     // 1. Segurança Pública
