@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserParams } from 'src/types';
 
@@ -36,6 +41,42 @@ export class UsersService {
       },
       orderBy: {
         createdAt: 'asc',
+      },
+    });
+  }
+
+  async updateRole(userId: number, role: Role) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    if (user.role === Role.ADMIN) {
+      throw new BadRequestException(
+        'Usuários ADMIN não podem ter o papel alterado.',
+      );
+    }
+
+    if (role === Role.ADMIN) {
+      throw new BadRequestException(
+        'Não é permitido promover usuários para ADMIN por esta rota.',
+      );
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
