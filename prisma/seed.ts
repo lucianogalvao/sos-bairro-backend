@@ -1,5 +1,10 @@
 import 'dotenv/config';
-import { PrismaClient, RiskLevel, Role } from '@prisma/client';
+import {
+  PrismaClient,
+  OccurrenceStatus,
+  RiskLevel,
+  Role,
+} from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 
@@ -25,54 +30,59 @@ async function main() {
   console.log('🌱 Limpando tabela de usuários...');
   await prisma.user.deleteMany();
 
-  console.log('🌱 Iniciando seed das categorias de ocorrência...');
+  console.log('👥 Criando usuários (10) ...');
 
-  const adminName = process.env.ADMIN_NAME ?? 'Admin Master';
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@sosbairro.com';
-  const adminPassword = process.env.ADMIN_PASSWORD ?? 'sosbairro@123';
+  const defaultPassword = 'sos@1234';
+  const defaultHash = await bcrypt.hash(defaultPassword, 10);
 
-  const adminHash = await bcrypt.hash(adminPassword, 10);
-
-  await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {
-      name: adminName,
-      passwordHash: adminHash,
-      role: Role.ADMIN,
-    },
-    create: {
-      name: adminName,
-      email: adminEmail,
-      role: Role.ADMIN,
-      passwordHash: adminHash,
-    },
-  });
-
-  console.log('✅ Admin Master criado');
-
-  const moderatorName = process.env.MODERATOR_NAME ?? 'Moderador SOS Bairro';
-  const moderatorEmail =
-    process.env.MODERATOR_EMAIL ?? 'moderador@sosbairro.com';
-  const moderatorPassword = process.env.MODERATOR_PASSWORD ?? 'sosbairro@123';
-
-  const moderatorHash = await bcrypt.hash(moderatorPassword, 10);
-
-  await prisma.user.upsert({
-    where: { email: moderatorEmail },
-    update: {
-      name: moderatorName,
-      passwordHash: moderatorHash,
+  const usersToSeed: Array<{ name: string; email: string; role: Role }> = [
+    { name: 'Admin Master', email: 'admin@sosbairro.com', role: Role.ADMIN },
+    {
+      name: 'Carlos Moderador',
+      email: 'carlos@sosbairro.com',
       role: Role.MODERADOR,
     },
-    create: {
-      name: moderatorName,
-      email: moderatorEmail,
+    {
+      name: 'Ana Moderadora',
+      email: 'ana@sosbairro.com',
       role: Role.MODERADOR,
-      passwordHash: moderatorHash,
     },
-  });
 
-  console.log('✅ Moderador SOS Bairro criado');
+    { name: 'João Silva', email: 'joao@sosbairro.com', role: Role.MORADOR },
+    { name: 'Maria Souza', email: 'maria@sosbairro.com', role: Role.MORADOR },
+    { name: 'Pedro Lima', email: 'pedro@sosbairro.com', role: Role.MORADOR },
+    { name: 'Lucas Rocha', email: 'lucas@sosbairro.com', role: Role.MORADOR },
+    {
+      name: 'Fernanda Alves',
+      email: 'fernanda@sosbairro.com',
+      role: Role.MORADOR,
+    },
+    { name: 'Bruno Costa', email: 'bruno@sosbairro.com', role: Role.MORADOR },
+    {
+      name: 'Juliana Mendes',
+      email: 'juliana@sosbairro.com',
+      role: Role.MORADOR,
+    },
+  ];
+
+  for (const u of usersToSeed) {
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: {
+        name: u.name,
+        role: u.role,
+        passwordHash: defaultHash,
+      },
+      create: {
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        passwordHash: defaultHash,
+      },
+    });
+  }
+
+  console.log('✅ Usuários criados');
 
   const categories: { title: string; riskLevel: RiskLevel }[] = [
     // 1. Segurança Pública
@@ -135,6 +145,95 @@ async function main() {
   });
 
   console.log('✅ Seed das categorias concluído.');
+
+  const [allCategories, residents, moderators] = await Promise.all([
+    prisma.occurrenceCategory.findMany({
+      select: { id: true, title: true, riskLevel: true },
+      orderBy: { id: 'asc' },
+    }),
+    prisma.user.findMany({
+      where: { role: Role.MORADOR },
+      select: { id: true },
+    }),
+    prisma.user.findMany({
+      where: { role: Role.MODERADOR },
+      select: { id: true },
+    }),
+  ]);
+
+  if (allCategories.length === 0) {
+    throw new Error('Nenhuma categoria encontrada após o seed.');
+  }
+
+  if (residents.length === 0) {
+    throw new Error('Nenhum morador encontrado após o seed.');
+  }
+
+  if (moderators.length === 0) {
+    throw new Error('Nenhum moderador encontrado após o seed.');
+  }
+
+  console.log('🚨 Criando ocorrências (30) ...');
+
+  const descriptions = [
+    'Relato recebido por moradores: situação observada e registrada no sistema.',
+    'Ocorrência reportada com localização aproximada; recomenda-se atenção no entorno.',
+    'Registro de evento no bairro; aguardando verificação e atualização de status.',
+    'Moradores informaram movimentação incomum; ocorrência cadastrada para análise.',
+    'Situação identificada em via pública; equipe de moderação acompanhará o caso.',
+    'Registro preventivo para manter histórico e apoiar tomada de decisão.',
+    'Ocorrência com evidências (mock) anexadas; verificar detalhes na tela de mapa.',
+    'Evento relatado em horário noturno; monitoramento recomendado.',
+    'Registro feito para fins de acompanhamento comunitário e estatística do bairro.',
+    'Ocorrência comunicada; aguardando validação e eventual resolução.',
+  ];
+
+  // distribuição estável: 12 registradas, 10 em análise, 8 resolvidas
+  const statusByIndex: OccurrenceStatus[] = [
+    ...Array.from({ length: 12 }, () => OccurrenceStatus.REGISTRADA),
+    ...Array.from({ length: 10 }, () => OccurrenceStatus.EM_ANALISE),
+    ...Array.from({ length: 8 }, () => OccurrenceStatus.RESOLVIDA),
+  ];
+
+  const occurrencesData = Array.from({ length: 30 }).map((_, i) => {
+    const status = statusByIndex[i] ?? OccurrenceStatus.REGISTRADA;
+
+    // escolhe categoria e morador de forma determinística (sem depender do Math.random)
+    const category = allCategories[i % allCategories.length];
+    const resident = residents[i % residents.length];
+
+    // moderador apenas quando não está REGISTRADA
+    const moderatorId =
+      status === OccurrenceStatus.REGISTRADA
+        ? null
+        : moderators[i % moderators.length].id;
+
+    // espalha datas nos últimos 30 dias
+    const daysAgo = 29 - (i % 30);
+    const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+
+    // coordenadas próximas (mock) do bairro
+    const locationLatitude = -27.45 + ((i % 10) * 0.001 + 0.0003);
+    const locationLongitude = -48.51 + ((i % 10) * 0.001 + 0.0007);
+
+    const description = `${category.title}: ${descriptions[i % descriptions.length]}`;
+
+    return {
+      description,
+      status,
+      categoryId: category.id,
+      residentId: resident.id,
+      moderatorId,
+      locationLatitude,
+      locationLongitude,
+      imageUrl: `https://mock.sos-bairro.local/ocorrencias/oc-${i + 1}.jpg`,
+      createdAt,
+    };
+  });
+
+  await prisma.occurrence.createMany({ data: occurrencesData });
+
+  console.log('✅ Seed das ocorrências concluído.');
 }
 
 main()
