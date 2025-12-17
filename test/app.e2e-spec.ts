@@ -25,6 +25,14 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL (test) não definido. Verifique o .env.test');
 }
 
+const looksLikeTestDb = databaseUrl.includes('sos_bairro_test');
+
+if (!looksLikeTestDb) {
+  throw new Error(
+    `DATABASE_URL não parece ser de TESTE. Recusando rodar e2e para não bagunçar o dev.\nDATABASE_URL=${databaseUrl}`,
+  );
+}
+
 const pool = new Pool({ connectionString: databaseUrl });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
