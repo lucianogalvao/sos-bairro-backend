@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "ROOT=$(node -p \"require('path').dirname(process.env.npm_package_json)\"); DATABASE_URL=$(ENV_PATH=$ROOT/test/.env.test node -e \"require('dotenv').config({ path: process.env.ENV_PATH, override: true }); process.stdout.write(process.env.DATABASE_URL || '')\"); DATABASE_URL=$DATABASE_URL $ROOT/node_modules/.bin/jest --config $ROOT/test/jest-e2e.json",
+    "test:e2e:db": "ROOT=$(node -p \"require('path').dirname(process.env.npm_package_json)\"); DATABASE_URL=$(ENV_PATH=$ROOT/test/.env.test node -e \"require('dotenv').config({ path: process.env.ENV_PATH, override: true }); process.stdout.write(process.env.DATABASE_URL || '')\"); DATABASE_URL=$DATABASE_URL $ROOT/node_modules/.bin/prisma migrate reset --force --config $ROOT/prisma.config.ts"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seed.ts"
