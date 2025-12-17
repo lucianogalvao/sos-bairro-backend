@@ -16,7 +16,6 @@ export class ReportsService {
 
     const byRiskRaw = await this.prisma.occurrence.findMany({
       select: {
-        riskLevelOverride: true,
         category: { select: { riskLevel: true } },
       },
     });
@@ -38,7 +37,7 @@ export class ReportsService {
     };
 
     byRiskRaw.forEach((item) => {
-      const risk = item.riskLevelOverride ?? item.category.riskLevel;
+      const risk = item.category.riskLevel;
       byRisk[risk]++;
     });
 
