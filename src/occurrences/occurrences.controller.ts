@@ -20,10 +20,13 @@ import { AssignModeratorDto } from './dto/assign-moderator.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
 }
 
+@ApiTags('occurrences')
+@ApiBearerAuth('access-token')
 @Controller('occurrences')
 export class OccurrencesController {
   constructor(private readonly occurrencesService: OccurrencesService) {}

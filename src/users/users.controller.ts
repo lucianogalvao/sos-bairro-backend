@@ -16,11 +16,14 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { AuthenticatedUser } from 'src/types';
 import { UsersService } from './users.service';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
 }
 
+@ApiTags('users')
+@ApiBearerAuth('access-token')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
