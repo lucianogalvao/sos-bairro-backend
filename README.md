@@ -147,9 +147,66 @@ npm run start:dev
 
 ---
 
-## 📌 Observações
+## 🐘 Banco de Dados com Docker (PostgreSQL)
 
-- Projeto desenvolvido para fins acadêmicos
-- Dados fictícios (mockados)
-- Ambiente controlado
-- Não representa um sistema real de segurança pública
+Para facilitar a execução do projeto em ambiente local e padronizar o ambiente de desenvolvimento, o banco de dados PostgreSQL pode ser executado utilizando **Docker**. Dessa forma, evita-se a necessidade de instalação manual do banco na máquina do desenvolvedor.
+
+### Pré-requisitos
+
+- Docker
+- Docker Compose
+
+### Subindo o banco de dados
+
+O projeto utiliza um container PostgreSQL configurado para uso local. Para iniciar o banco de dados, execute o comando abaixo na raiz do projeto:
+
+```bash
+docker compose up -d
+```
+
+Após a execução, o banco de dados estará disponível em:
+
+```
+localhost:5432
+```
+
+Com as credenciais configuradas no arquivo `.env`:
+
+```env
+DATABASE_URL="postgresql://admin:admin@localhost:5432/sos_bairro?schema=public"
+```
+
+### Aplicando as migrações
+
+Com o banco em execução, aplique as migrações do Prisma para criar as tabelas necessárias:
+
+```bash
+npx prisma migrate dev
+```
+
+### Populando o banco com dados iniciais (seed)
+
+Para criar usuários administrativos, moderadores, moradores e ocorrências de exemplo, execute:
+
+```bash
+npx prisma db seed
+```
+
+Esse processo cria um cenário inicial funcional para testes e validações do sistema.
+
+### Ambiente de Testes
+
+O projeto também conta com um banco de dados isolado para execução dos testes automatizados (E2E), evitando impacto no ambiente de desenvolvimento.
+
+O ambiente de testes utiliza um arquivo próprio:
+
+```bash
+test/.env.test
+```
+
+Antes de rodar os testes, o banco de testes é resetado automaticamente:
+
+```bash
+npm run test:e2e:db
+npm run test:e2e
+```
