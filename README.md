@@ -210,3 +210,16 @@ Antes de rodar os testes, o banco de testes é resetado automaticamente:
 npm run test:e2e:db
 npm run test:e2e
 ```
+
+## 🌐 API em Produção
+
+O backend do **SOS Bairro** está publicado em ambiente de produção utilizando a plataforma Railway.
+
+🔗 **Base URL**
+https://sos-bairro-backend-production.up.railway.app
+
+### 📘 Documentação (Swagger)
+
+A documentação interativa da API, gerada com Swagger, pode ser acessada em:
+
+🔗 https://sos-bairro-backend-production.up.railway.app/docs
