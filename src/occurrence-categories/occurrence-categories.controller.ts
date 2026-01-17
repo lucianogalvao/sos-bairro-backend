@@ -7,7 +7,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { OccurrenceCategoriesService } from './occurrence-categories.service';
-import { RiskLevel } from '@prisma/client';
+import { CreateOccurrenceCategoryDto } from './dto/create-occurrence-category.dto';
 
 @Controller('categories')
 export class OccurrenceCategoriesController {
@@ -26,13 +26,7 @@ export class OccurrenceCategoriesController {
   }
 
   @Post()
-  create(
-    @Body()
-    body: {
-      title: string;
-      riskLevel: RiskLevel;
-    },
-  ) {
+  create(@Body() body: CreateOccurrenceCategoryDto) {
     return this.occurrenceCategoriesService.create(body);
   }
 }
