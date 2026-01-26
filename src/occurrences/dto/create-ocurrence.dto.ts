@@ -25,4 +25,8 @@ export class CreateOcurrenceDto {
   @IsOptional()
   @IsNumber()
   locationLongitude?: number;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
 }

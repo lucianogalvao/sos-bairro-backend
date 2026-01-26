@@ -216,6 +216,8 @@ async function main() {
     const locationLatitude = -27.45 + ((i % 10) * 0.001 + 0.0003);
     const locationLongitude = -48.51 + ((i % 10) * 0.001 + 0.0007);
 
+    const address = `Rua Exemplo ${100 + i}, Bairro SOS Bairro, Cidade Exemplar`;
+
     const description = `${category.title}: ${descriptions[i % descriptions.length]}`;
 
     return {
@@ -227,6 +229,7 @@ async function main() {
       locationLatitude,
       locationLongitude,
       imageUrl: `https://mock.sos-bairro.local/ocorrencias/oc-${i + 1}.jpg`,
+      address,
       createdAt,
     };
   });

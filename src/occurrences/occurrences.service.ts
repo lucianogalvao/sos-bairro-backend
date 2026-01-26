@@ -28,6 +28,7 @@ export class OccurrencesService {
         imageUrl: createDto.imageUrl,
         locationLatitude: createDto.locationLatitude,
         locationLongitude: createDto.locationLongitude,
+        address: createDto.address,
       },
       include: {
         category: true,
