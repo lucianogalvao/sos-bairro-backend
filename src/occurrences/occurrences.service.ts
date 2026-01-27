@@ -218,4 +218,19 @@ export class OccurrencesService {
       },
     });
   }
+
+  async remove(id: number) {
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada.');
+    }
+
+    await this.prisma.occurrence.delete({
+      where: { id },
+    });
+  }
 }

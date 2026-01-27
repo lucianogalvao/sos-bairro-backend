@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -49,5 +51,13 @@ export class UsersController {
     @Body() body: UpdateUserRoleDto,
   ) {
     return this.usersService.updateRole(id, body.role);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERADOR)
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.usersService.remove(id);
   }
 }

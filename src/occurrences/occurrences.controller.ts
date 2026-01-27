@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -78,5 +80,13 @@ export class OccurrencesController {
     @Body() body: AssignModeratorDto,
   ) {
     return this.occurrencesService.assignModerator(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERADOR)
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.occurrencesService.remove(id);
   }
 }

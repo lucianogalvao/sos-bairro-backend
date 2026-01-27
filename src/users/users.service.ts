@@ -80,4 +80,19 @@ export class UsersService {
       },
     });
   }
+
+  async remove(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    await this.prisma.user.delete({
+      where: { id },
+    });
+  }
 }
