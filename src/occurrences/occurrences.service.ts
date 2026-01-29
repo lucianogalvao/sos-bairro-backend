@@ -35,7 +35,7 @@ export class OccurrencesService {
 
     if (!category) throw new Error('Categoria de ocorrência não encontrada');
 
-    const ocurrence = await this.prisma.occurrence.create({
+    return this.prisma.occurrence.create({
       data: {
         description: createDto.description,
         categoryId: createDto.categoryId,
@@ -48,16 +48,10 @@ export class OccurrencesService {
       include: {
         category: true,
         resident: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+          select: { id: true, name: true, email: true },
         },
       },
     });
-
-    return ocurrence;
   }
 
   async findMine(residentId: number) {
@@ -68,12 +62,10 @@ export class OccurrencesService {
     });
   }
 
-  // ✅ Todos podem ver todas as ocorrências
   async findAll(query: ListOccurrencesQueryDto) {
     const where: Prisma.OccurrenceWhereInput = {};
 
     if (query.status) where.status = query.status;
-
     if (query.categoryId !== undefined) where.categoryId = query.categoryId;
 
     if (query.dateFrom || query.dateTo) {
@@ -105,20 +97,8 @@ export class OccurrencesService {
         orderBy,
         include: {
           category: true,
-          resident: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          moderator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
+          resident: { select: { id: true, name: true, email: true } },
+          moderator: { select: { id: true, name: true, email: true } },
         },
       }),
     ]);
@@ -126,34 +106,21 @@ export class OccurrencesService {
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
     return {
       items,
-      meta: {
-        page,
-        pageSize,
-        totalItems,
-        totalPages,
-      },
+      meta: { page, pageSize, totalItems, totalPages },
     };
   }
 
-  // ✅ Todos podem ver detalhes
   async findOne(id: number) {
     const occurrence = await this.prisma.occurrence.findUnique({
       where: { id },
       include: {
         category: true,
-        resident: {
-          select: { id: true, name: true, email: true },
-        },
-        moderator: {
-          select: { id: true, name: true, email: true },
-        },
+        resident: { select: { id: true, name: true, email: true } },
+        moderator: { select: { id: true, name: true, email: true } },
       },
     });
 
-    if (!occurrence) {
-      throw new NotFoundException('Ocorrência não encontrada.');
-    }
-
+    if (!occurrence) throw new NotFoundException('Ocorrência não encontrada.');
     return occurrence;
   }
 
@@ -163,9 +130,7 @@ export class OccurrencesService {
       select: { id: true, status: true },
     });
 
-    if (!occurrence) {
-      throw new NotFoundException('Ocorrência não encontrada.');
-    }
+    if (!occurrence) throw new NotFoundException('Ocorrência não encontrada.');
 
     const current = occurrence.status;
     const next = dto.status;
@@ -208,32 +173,20 @@ export class OccurrencesService {
     const occurrence = await this.prisma.occurrence.findUnique({
       where: { id },
     });
-
-    if (!occurrence) {
-      throw new NotFoundException('Ocorrência não encontrada.');
-    }
+    if (!occurrence) throw new NotFoundException('Ocorrência não encontrada.');
 
     const moderator = await this.prisma.user.findUnique({
       where: { id: dto.moderatorId },
     });
-
-    if (!moderator) {
-      throw new NotFoundException('Moderador não encontrado.');
-    }
+    if (!moderator) throw new NotFoundException('Moderador não encontrado.');
 
     return this.prisma.occurrence.update({
       where: { id },
-      data: {
-        moderatorId: dto.moderatorId,
-      },
+      data: { moderatorId: dto.moderatorId },
       include: {
         category: true,
-        resident: {
-          select: { id: true, name: true, email: true },
-        },
-        moderator: {
-          select: { id: true, name: true, email: true },
-        },
+        resident: { select: { id: true, name: true, email: true } },
+        moderator: { select: { id: true, name: true, email: true } },
       },
     });
   }
@@ -248,13 +201,14 @@ export class OccurrencesService {
       throw new NotFoundException('Ocorrência não encontrada.');
     }
 
-    if (occurrence.residentId !== user.id) {
+    const isOwner = occurrence.residentId === user.id;
+    const isAdminOrMod = this.isAdminOrModerator(user);
+
+    if (!isOwner && !isAdminOrMod) {
       throw new ForbiddenException('Você não pode excluir esta ocorrência.');
     }
 
-    await this.prisma.occurrence.delete({
-      where: { id },
-    });
+    await this.prisma.occurrence.delete({ where: { id } });
   }
 
   async updateOccurrence(
@@ -264,16 +218,10 @@ export class OccurrencesService {
   ) {
     const occurrence = await this.prisma.occurrence.findUnique({
       where: { id },
-      select: {
-        id: true,
-        residentId: true,
-        status: true,
-      },
+      select: { id: true, residentId: true, status: true },
     });
 
-    if (!occurrence) {
-      throw new NotFoundException('Ocorrência não encontrada');
-    }
+    if (!occurrence) throw new NotFoundException('Ocorrência não encontrada');
 
     if (!this.isEditableStatus(occurrence.status)) {
       throw new ForbiddenException(
@@ -300,12 +248,8 @@ export class OccurrencesService {
       },
       include: {
         category: true,
-        resident: {
-          select: { id: true, name: true, email: true },
-        },
-        moderator: {
-          select: { id: true, name: true, email: true },
-        },
+        resident: { select: { id: true, name: true, email: true } },
+        moderator: { select: { id: true, name: true, email: true } },
       },
     });
   }
