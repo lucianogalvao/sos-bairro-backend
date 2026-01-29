@@ -3,9 +3,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserParams } from 'src/types';
+
+type UpdateUserParams = {
+  name?: string;
+  email?: string;
+  address?: string | null;
+  avatarUrl?: string | null;
+};
 
 @Injectable()
 export class UsersService {
@@ -75,6 +82,72 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async updateUser(userId: number, dto: UpdateUserParams) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    const data: Prisma.UserUpdateInput = {};
+
+    if (dto.name !== undefined) {
+      const name = String(dto.name).trim();
+      if (!name) throw new BadRequestException('Nome inválido.');
+      data.name = name;
+    }
+
+    if (dto.email !== undefined) {
+      const email = String(dto.email).trim().toLowerCase();
+      if (!email) throw new BadRequestException('Email inválido.');
+
+      const emailInUse = await this.prisma.user.findFirst({
+        where: { email, NOT: { id: userId } },
+        select: { id: true },
+      });
+
+      if (emailInUse) {
+        throw new BadRequestException('Este e-mail já está em uso.');
+      }
+
+      data.email = email;
+    }
+
+    if (dto.address !== undefined) {
+      const address =
+        dto.address == null ? null : String(dto.address).trim() || null;
+      data.address = address;
+    }
+
+    if (dto.avatarUrl !== undefined) {
+      const avatarUrl =
+        dto.avatarUrl == null ? null : String(dto.avatarUrl).trim() || null;
+      data.avatarUrl = avatarUrl;
+    }
+
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestException('Nenhum campo para atualizar.');
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        address: true,
+        avatarUrl: true,
         createdAt: true,
         updatedAt: true,
       },
