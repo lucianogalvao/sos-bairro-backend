@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOcurrenceDto } from './dto/create-ocurrence.dto';
-import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
+import { ListOccurrencesQueryDto } from './dto/list-occurrences.dto';
 import { OccurrenceStatus, Prisma } from '@prisma/client';
 import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
 import { AssignModeratorDto } from './dto/assign-moderator.dto';
