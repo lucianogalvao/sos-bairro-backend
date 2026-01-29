@@ -33,8 +33,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('my-profile')
-  getMe(@Req() req: AuthenticatedRequest) {
-    return req.user;
+  async getMe(@Req() req: AuthenticatedRequest) {
+    return this.usersService.findMe(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
