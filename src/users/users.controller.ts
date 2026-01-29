@@ -19,6 +19,7 @@ import { AuthenticatedUser } from 'src/types';
 import { UsersService } from './users.service';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
@@ -34,6 +35,12 @@ export class UsersController {
   @Get('my-profile')
   getMe(@Req() req: AuthenticatedRequest) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  async updateMe(@Req() req: AuthenticatedRequest, @Body() body: UpdateMeDto) {
+    return this.usersService.updateMe(req.user.id, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

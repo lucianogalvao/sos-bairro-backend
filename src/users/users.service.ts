@@ -7,9 +7,8 @@ import { Role, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserParams } from 'src/types';
 
-type UpdateUserParams = {
+type UpdateMeParams = {
   name?: string;
-  email?: string;
   address?: string | null;
   avatarUrl?: string | null;
 };
@@ -88,10 +87,32 @@ export class UsersService {
     });
   }
 
-  async updateUser(userId: number, dto: UpdateUserParams) {
+  async findMe(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        address: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    return user;
+  }
+
+  async updateMe(userId: number, dto: UpdateMeParams) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
     });
 
     if (!user) {
@@ -104,22 +125,6 @@ export class UsersService {
       const name = String(dto.name).trim();
       if (!name) throw new BadRequestException('Nome inválido.');
       data.name = name;
-    }
-
-    if (dto.email !== undefined) {
-      const email = String(dto.email).trim().toLowerCase();
-      if (!email) throw new BadRequestException('Email inválido.');
-
-      const emailInUse = await this.prisma.user.findFirst({
-        where: { email, NOT: { id: userId } },
-        select: { id: true },
-      });
-
-      if (emailInUse) {
-        throw new BadRequestException('Este e-mail já está em uso.');
-      }
-
-      data.email = email;
     }
 
     if (dto.address !== undefined) {
@@ -153,7 +158,6 @@ export class UsersService {
       },
     });
   }
-
   async remove(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
