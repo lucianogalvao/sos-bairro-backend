@@ -85,22 +85,23 @@ export class OccurrencesController {
     return this.occurrencesService.assignModerator(id, body);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.MODERADOR)
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @HttpCode(204)
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.occurrencesService.remove(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.occurrencesService.remove(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   updateOccurrence(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateOccurrenceDto,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.occurrencesService.updateOccurrence(Number(id), dto, user);
+    return this.occurrencesService.updateOccurrence(id, dto, req.user);
   }
 }

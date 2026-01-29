@@ -17,12 +17,24 @@ import { AuthenticatedUser } from 'src/types';
 export class OccurrencesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private isAdminOrModerator(user: AuthenticatedUser) {
+    return user.role === 'ADMIN' || user.role === 'MODERADOR';
+  }
+
+  private isEditableStatus(status: OccurrenceStatus) {
+    return (
+      status === OccurrenceStatus.REGISTRADA ||
+      status === OccurrenceStatus.EM_ANALISE
+    );
+  }
+
   async create(createDto: CreateOcurrenceDto, residentId: number) {
     const category = await this.prisma.occurrenceCategory.findUnique({
       where: { id: createDto.categoryId },
     });
 
     if (!category) throw new Error('Categoria de ocorrência não encontrada');
+
     const ocurrence = await this.prisma.occurrence.create({
       data: {
         description: createDto.description,
@@ -44,8 +56,10 @@ export class OccurrencesService {
         },
       },
     });
+
     return ocurrence;
   }
+
   async findMine(residentId: number) {
     return this.prisma.occurrence.findMany({
       where: { residentId },
@@ -54,6 +68,7 @@ export class OccurrencesService {
     });
   }
 
+  // ✅ Todos podem ver todas as ocorrências
   async findAll(query: ListOccurrencesQueryDto) {
     const where: Prisma.OccurrenceWhereInput = {};
 
@@ -120,6 +135,7 @@ export class OccurrencesService {
     };
   }
 
+  // ✅ Todos podem ver detalhes
   async findOne(id: number) {
     const occurrence = await this.prisma.occurrence.findUnique({
       where: { id },
@@ -222,14 +238,18 @@ export class OccurrencesService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, user: AuthenticatedUser) {
     const occurrence = await this.prisma.occurrence.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, residentId: true },
     });
 
     if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada.');
+    }
+
+    if (occurrence.residentId !== user.id) {
+      throw new ForbiddenException('Você não pode excluir esta ocorrência.');
     }
 
     await this.prisma.occurrence.delete({
@@ -244,18 +264,27 @@ export class OccurrencesService {
   ) {
     const occurrence = await this.prisma.occurrence.findUnique({
       where: { id },
+      select: {
+        id: true,
+        residentId: true,
+        status: true,
+      },
     });
 
     if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada');
     }
 
-    // 🔐 Regra de permissão
-    if (user.role === 'MORADOR' && occurrence.residentId !== user.id) {
+    if (!this.isEditableStatus(occurrence.status)) {
+      throw new ForbiddenException(
+        'Ocorrências resolvidas não podem ser editadas.',
+      );
+    }
+
+    if (!this.isAdminOrModerator(user) && occurrence.residentId !== user.id) {
       throw new ForbiddenException('Você não pode editar esta ocorrência');
     }
 
-    // 🚫 Não permitir payload vazio
     if (Object.keys(dto).length === 0) {
       throw new BadRequestException('Nenhum campo para atualizar');
     }
