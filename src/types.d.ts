@@ -20,3 +20,18 @@ export interface AuthenticatedUser {
   name: string;
   role: Role;
 }
+
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      email: string;
+      name: string;
+      role: Role;
+    }
+
+    interface Request {
+      user?: User;
+    }
+  }
+}
