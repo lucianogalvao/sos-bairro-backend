@@ -23,6 +23,9 @@ import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { UpdateOccurrenceDto } from './dto/update-occurrence.dto';
+import type { Request } from 'express';
+
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
 }
@@ -88,5 +91,16 @@ export class OccurrencesController {
   @HttpCode(204)
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.occurrencesService.remove(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  updateOccurrence(
+    @Param('id') id: string,
+    @Body() dto: UpdateOccurrenceDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as AuthenticatedUser;
+    return this.occurrencesService.updateOccurrence(Number(id), dto, user);
   }
 }

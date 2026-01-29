@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +10,8 @@ import { ListOccurrencesQueryDto } from './dto/list-occurrences.query';
 import { OccurrenceStatus, Prisma } from '@prisma/client';
 import { UpdateOccurrenceStatusDto } from './dto/update-occurence-status.dto';
 import { AssignModeratorDto } from './dto/assign-moderator.dto';
+import { UpdateOccurrenceDto } from './dto/update-occurrence.dto';
+import { AuthenticatedUser } from 'src/types';
 
 @Injectable()
 export class OccurrencesService {
@@ -231,6 +234,50 @@ export class OccurrencesService {
 
     await this.prisma.occurrence.delete({
       where: { id },
+    });
+  }
+
+  async updateOccurrence(
+    id: number,
+    dto: UpdateOccurrenceDto,
+    user: AuthenticatedUser,
+  ) {
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { id },
+    });
+
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada');
+    }
+
+    // 🔐 Regra de permissão
+    if (user.role === 'MORADOR' && occurrence.residentId !== user.id) {
+      throw new ForbiddenException('Você não pode editar esta ocorrência');
+    }
+
+    // 🚫 Não permitir payload vazio
+    if (Object.keys(dto).length === 0) {
+      throw new BadRequestException('Nenhum campo para atualizar');
+    }
+
+    return this.prisma.occurrence.update({
+      where: { id },
+      data: {
+        description: dto.description,
+        categoryId: dto.categoryId,
+        address: dto.address,
+        locationLatitude: dto.locationLatitude,
+        locationLongitude: dto.locationLongitude,
+      },
+      include: {
+        category: true,
+        resident: {
+          select: { id: true, name: true, email: true },
+        },
+        moderator: {
+          select: { id: true, name: true, email: true },
+        },
+      },
     });
   }
 }
