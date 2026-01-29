@@ -1,18 +1,20 @@
-import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateMeDto {
   @IsOptional()
   @IsString()
-  @MaxLength(120)
   name?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  address?: string;
+  address?: string | null;
 
   @IsOptional()
-  @IsUrl()
-  @MaxLength(500)
+  @Transform(({ value }) => {
+    if (value === '' || value == null) return null; // <-- aqui
+    return String(value).trim();
+  })
+  @IsUrl({}, { message: 'avatarUrl must be a URL address' })
   avatarUrl?: string | null;
 }
